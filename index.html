@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Projeto de Agente com Busca de IA</title>
+
+  <style>
+    body {
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column; 
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f0f0f0; 
+      font-family: sans-serif;
+      background-color: #222; 
+        color: #fff; 
+    }
+    .controls {
+      margin-bottom: 20px;
+    }
+    select, button {
+      padding: 8px;
+      font-size: 16px;
+      margin: 0 5px;
+    }
+  </style>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+
+</head>
+<body>
+  
+  <div class="controls">
+    <label for="algorithm-select">Escolha o Algoritmo:</label>
+    <select id="algorithm-select">
+      <option value="bfs">Busca em Largura (BFS)</option>
+        <option value="dfs">Busca em Profundidade (DFS)</option>
+        <option value="ucs">Busca de Custo Uniforme (UCS)</option>
+        <option value="greedy">Busca Gulosa</option>
+        <option value="a_star">A*</option>
+      </select>
+    <button id="start-search-btn">Iniciar Busca</button>
+  </div>
+
+  <main></main>
+
+  <script type="module" src="settings.js"></script>
+  <script type="module" src="drawing.js"></script>
+  <script type="module" src="search.js"></script>
+  <script type="module" src="sketch.js"></script>
+</body>
+</html>
