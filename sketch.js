@@ -2,7 +2,7 @@ import { TILE_SIZE, GRID_ROWS, GRID_COLS, TERRAIN } from './config/settings.js';
 import { drawGrid, drawAgent, drawFood, drawSearchVisualization } from './config/drawing.js';
 import { bfs } from './config/search.js';
 
-let grid;
+let grid; 
 let agent;
 let food;
 
