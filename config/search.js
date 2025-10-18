@@ -1,3 +1,4 @@
+import { TERRAIN_COST } from "./settings.js";
 export class Search {
   constructor(start, grid, food) {
     this.start = start;
@@ -7,14 +8,14 @@ export class Search {
     this.distance = this.createGrid(-1);
 
     this.directions = [
-      { x: 0, y: -1 }, // cima
-      { x: 1, y: 0 }, // direita
-      { x: 0, y: 1 }, // baixo
-      { x: -1, y: 0 }, // esquerda
+      { x: -1, y: 1 }, // baixo-esquerda
+      { x: 1, y: 1 }, // baixo-direita
       { x: -1, y: -1 }, // cima-esquerda
       { x: 1, y: -1 }, // cima-direita
-      { x: 1, y: 1 }, // baixo-direita
-      { x: -1, y: 1 }, // baixo-esquerda
+      { x: -1, y: 0 }, // esquerda
+      { x: 0, y: 1 }, // baixo
+      { x: 1, y: 0 }, // direita
+      { x: 0, y: -1 }, // cima
     ];
   }
 
@@ -55,6 +56,30 @@ export class Search {
     return pos.x === this.food.x && pos.y === this.food.y;
   }
 
+ // Reconstruct path from parent map to food
+  _reconstructPath(parent) {
+    let path = [];
+    let current = this.food;
+    const maxSteps = this.grid.length * this.grid[0].length + 5;
+    let steps = 0;
+    const seen = new Set();
+
+    while (current && steps < maxSteps) {
+      const key = `${current.x},${current.y}`;
+      if (seen.has(key)) break; // ciclo detectado
+
+      path.push(current);
+      seen.add(key);
+      const p = parent[current.y] && parent[current.y][current.x];
+
+      if (!p) break; // chegou ao início (ou a um nó sem pai)
+      current = p;
+      steps++;
+    }
+    path.reverse();
+    return path;
+  }
+
   bfs() {
     let queue = [];
     queue.push(this.start);
@@ -63,7 +88,6 @@ export class Search {
 
     let parent = this.createGrid(null);
     let visitedOrder = [];
-    let path = [];
 
     while (queue.length > 0) {
       const current = queue.shift();
@@ -92,24 +116,7 @@ export class Search {
       }
     }
 
-    // reconstruct path
-    let current = this.food;
-    const maxSteps = this.grid.length * this.grid[0].length + 5;
-    let steps = 0;
-    const seen = new Set();
-    while (current && steps < maxSteps) {
-      const key = `${current.x},${current.y}`;
-      if (seen.has(key)) break; // cycle detected
-
-      path.push(current);
-      seen.add(key);
-      const p = parent[current.y] && parent[current.y][current.x];
-
-      if (!p) break;
-      current = p;
-      steps++;
-    }
-    path.reverse();
+    const path = this._reconstructPath(parent);
 
     return { visitedOrder, path };
   }
@@ -120,5 +127,47 @@ export class Search {
 
   greedyBestFirst() {}
 
-  uniformCostSearch() {}
+  uniformCostSearch() {
+    let priorityQueue = [];
+    priorityQueue.push({ pos: this.start, cost: 0 });
+    this.distance[this.start.y][this.start.x] = 0;
+
+    let parent = this.createGrid(null);
+    let visitedOrder = [];
+
+    while (priorityQueue.length > 0) {
+      // sort by cost
+      priorityQueue.sort((a, b) => a.cost - b.cost);
+      const { pos: current, cost: currentCost } = priorityQueue.shift();
+
+      if (this.wasVisited(current)) {
+        continue;
+      }
+
+      this.visited[current.y][current.x] = true; // visitado
+      visitedOrder.push(current);
+
+      if (this.isDestination(current)) break;
+
+      for (const dir of this.directions) {
+        const x = current.x + dir.x;
+        const y = current.y + dir.y;
+
+        if (this.isValidPosition(x, y)) {
+          const terrainType = this.grid[y][x].type;
+          const moveCost = TERRAIN_COST[terrainType] || 1;
+          const newCost = currentCost + moveCost;
+
+          if (this.hasBiggerDistance({ x, y }, newCost)) {
+            this.distance[y][x] = newCost;
+            parent[y][x] = current;
+            priorityQueue.push({ pos: { x, y }, cost: newCost }); // adicionar à fila de prioridade com o novo custo
+          }
+        }
+      }
+    }
+    const path = this._reconstructPath(parent);
+
+    return { visitedOrder, path };
+  }
 }

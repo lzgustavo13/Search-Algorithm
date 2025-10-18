@@ -34,36 +34,16 @@ window.setup = function () {
 
 function startSearch() {
   const selectedAlgorithm = document.getElementById("algorithm-select").value;
-
-  this.isAnimating = false;
-  this.path = [];
-  this.visitedOrder = [];
-  this.currentPathIndex = 0;
-  this.animationStep = ANIM.NONE;
-
+  this.selectedAlgorithm = selectedAlgorithm;
+  this.isAnimating = false; 
   this.search = new Search(this.agent, this.map.grid, this.food);
 
-  if (selectedAlgorithm === "bfs") {
-    const { visitedOrder, path } = this.search.bfs();
-    console.log("Visited Order:", visitedOrder);
-    console.log("Path:", path);
+  const { visitedOrder, path } = runSelectedSearch.call(this);
 
-    this.path = path;
-    this.visitedOrder = visitedOrder;
+  console.log("Visited Order:", visitedOrder);
+  console.log("Path:", path);
 
-    this.animationStep = ANIM.VISIT; // start with search animation
-    this.animationIndex = 0; // index into visitedOrder
-    this.animationFrameCounter = 0; // frame counter to control speed
-    this.framesPerStep = DEFAULT_FRAMES_PER_STEP; // speed of the animation
-  }
-  if (selectedAlgorithm === "dfs") {
-  }
-  if (selectedAlgorithm === "aStar") {
-  }
-  if (selectedAlgorithm === "greedyBestFirst") {
-  }
-  if (selectedAlgorithm === "uniformCostSearch") {
-  }
+  resetAnimationState.call(this, visitedOrder, path);
 }
 
 window.draw = function () {
@@ -140,9 +120,10 @@ window.draw = function () {
         this.food = new Character(newPos.x, newPos.y);
         this.search = new Search(this.agent, this.map.grid, this.food);
 
-        const res = this.search.bfs();
+        const res = runSelectedSearch.call(this);
         newVisited = res.visitedOrder || [];
         newPath = res.path || [];
+
         attempts++;
       } while (
         (newPath.length === 0 ||
@@ -150,18 +131,7 @@ window.draw = function () {
         attempts < 10
       );
 
-      // prepare animation to reveal newVisited then newPath
-      this.visitedOrder = newVisited;
-      this.path = newPath;
-      this.animationStep = ANIM.VISIT;
-      this.animationIndex = 0;
-      this.animationFrameCounter = 0;
-      this.framesPerStep = this.framesPerStep || DEFAULT_FRAMES_PER_STEP;
-
-      // reset movement counters
-      this.moveFrameCounter = 0;
-      this.moveFramesForCurrentCell = 1;
-
+      resetAnimationState.call(this, newVisited, newPath);
       return;
     }
 
@@ -183,3 +153,28 @@ window.draw = function () {
 
   this.agent.draw(COLORS.AGENT, TILE_SIZE);
 };
+
+function runSelectedSearch() {
+  const algorithm = this.selectedAlgorithm;
+
+  if (algorithm === "bfs") return this.search.bfs();
+  if (algorithm === "dfs") return this.search.dfs();
+  if (algorithm === "ucs") return this.search.uniformCostSearch();
+  if (algorithm === "greedy") return this.search.greedyBestFirst();
+  if (algorithm === "a_star") return this.search.aStar();
+
+  console.error("Algoritmo desconhecido:", algorithm);
+  return { visitedOrder: [], path: [] };
+}
+
+function resetAnimationState(visitedOrder, path) {
+  this.path = path || [];
+  this.visitedOrder = visitedOrder || [];
+
+  this.animationStep = ANIM.VISIT; // start with visit animation
+  this.animationIndex = 0; // index for animation progress
+  this.animationFrameCounter = 0; // frame counter for animation speed
+  this.framesPerStep = this.framesPerStep || DEFAULT_FRAMES_PER_STEP; // frames per step
+  this.moveFrameCounter = 0; // frame counter for movement
+  this.moveFramesForCurrentCell = 1; // frames needed for current cell movement
+}
