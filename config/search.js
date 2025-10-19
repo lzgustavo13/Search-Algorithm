@@ -121,7 +121,48 @@ export class Search {
     return { visitedOrder, path };
   }
 
-  dfs() {}
+  dfs() {
+
+    let stack = [];
+    stack.push(this.start);
+    this.visited[this.start.y][this.start.x] = true;
+    this.distance[this.start.y][this.start.x] = 0;
+
+    let parent = this.createGrid(null);
+    let visitedOrder = [];
+
+    while (stack.length > 0) {
+      const current = stack.pop();
+      visitedOrder.push(current);
+
+      if (this.isDestination(current)) break;
+
+      for (const dir of this.directions) {
+        const x = current.x + dir.x;
+        const y = current.y + dir.y;
+
+        if (
+          this.isValidPosition(x, y) &&
+          (!this.wasVisited({ x, y }) ||
+            this.hasBiggerDistance(
+              { x, y },
+              this.distance[current.y][current.x] + 1
+            ))
+        ) {
+          this.visited[y][x] = true;
+          this.distance[y][x] = this.distance[current.y][current.x] + 1;
+
+          parent[y][x] = current;
+          stack.push({ x, y });
+        }
+      }
+    }
+
+    const path = this._reconstructPath(parent);
+
+    return { visitedOrder, path };
+
+  }
 
   aStar() {}
 
