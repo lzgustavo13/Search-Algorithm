@@ -157,7 +157,71 @@ export class Search {
 
   }
 
-  aStar() {}
+  // Heurística: distância de Manhattan
+  heuristic(pos) {
+    return Math.abs(pos.x - this.food.x) + Math.abs(pos.y - this.food.y);
+  }
+
+  aStar() {
+    let priorityQueue = [];
+    const gScore = this.createGrid(Infinity); // custo real do início até o nó
+    const fScore = this.createGrid(Infinity); // gScore + heurística
+
+    gScore[this.start.y][this.start.x] = 0;
+    fScore[this.start.y][this.start.x] = this.heuristic(this.start);
+
+    priorityQueue.push({
+      pos: this.start,
+      f: fScore[this.start.y][this.start.x]
+    });
+
+    let parent = this.createGrid(null);
+    let visitedOrder = [];
+
+    while (priorityQueue.length > 0) {
+      // ordenar por f (custo total estimado)
+      priorityQueue.sort((a, b) => a.f - b.f);
+      const { pos: current } = priorityQueue.shift();
+
+      if (this.wasVisited(current)) {
+        continue;
+      }
+
+      this.visited[current.y][current.x] = true;
+      visitedOrder.push(current);
+
+      if (this.isDestination(current)) break;
+
+      for (const dir of this.directions) {
+        const x = current.x + dir.x;
+        const y = current.y + dir.y;
+
+        if (this.isValidPosition(x, y)) {
+          const terrainType = this.grid[y][x].type;
+          const moveCost = TERRAIN_COST[terrainType] || 1;
+          const tentativeGScore = gScore[current.y][current.x] + moveCost;
+
+          // se encontramos um caminho melhor para este nó
+          if (tentativeGScore < gScore[y][x]) {
+            gScore[y][x] = tentativeGScore;
+            fScore[y][x] = tentativeGScore + this.heuristic({ x, y });
+            parent[y][x] = current;
+
+            // adicionar à fila de prioridade se ainda não foi visitado
+            if (!this.wasVisited({ x, y })) {
+              priorityQueue.push({
+                pos: { x, y },
+                f: fScore[y][x]
+              });
+            }
+          }
+        }
+      }
+    }
+
+    const path = this._reconstructPath(parent);
+    return { visitedOrder, path };
+  }
 
   greedyBestFirst() {}
 
