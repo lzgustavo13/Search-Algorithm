@@ -126,7 +126,6 @@ export class Search {
     let stack = [];
     stack.push(this.start);
     this.visited[this.start.y][this.start.x] = true;
-    this.distance[this.start.y][this.start.x] = 0;
 
     let parent = this.createGrid(null);
     let visitedOrder = [];
@@ -143,15 +142,9 @@ export class Search {
 
         if (
           this.isValidPosition(x, y) &&
-          (!this.wasVisited({ x, y }) ||
-            this.hasBiggerDistance(
-              { x, y },
-              this.distance[current.y][current.x] + 1
-            ))
+          !this.wasVisited({ x, y })
         ) {
           this.visited[y][x] = true;
-          this.distance[y][x] = this.distance[current.y][current.x] + 1;
-
           parent[y][x] = current;
           stack.push({ x, y });
         }
