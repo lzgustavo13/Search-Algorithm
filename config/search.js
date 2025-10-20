@@ -158,56 +158,87 @@ export class Search {
   }
 
   // Heurística: distância de Manhattan
+  // Calcula a estimativa de distância do ponto atual até o objetivo (comida)
+  // Usa a soma das diferenças absolutas em x e y (distância em grade sem diagonais)
   heuristic(pos) {
     return Math.abs(pos.x - this.food.x) + Math.abs(pos.y - this.food.y);
   }
 
   aStar() {
+    // Fila de prioridade para armazenar os nós a serem explorados
+    // Os nós são ordenados pelo valor f (custo total estimado)
     let priorityQueue = [];
-    const gScore = this.createGrid(Infinity); // custo real do início até o nó
-    const fScore = this.createGrid(Infinity); // gScore + heurística
 
+    // gScore: custo real acumulado do início até cada nó
+    const gScore = this.createGrid(Infinity);
+
+    // fScore: custo total estimado (gScore + heurística)
+    // f(n) = g(n) + h(n), onde g(n) é o custo real e h(n) é a heurística
+    const fScore = this.createGrid(Infinity);
+
+    // Inicializar o nó de início com custo 0
     gScore[this.start.y][this.start.x] = 0;
     fScore[this.start.y][this.start.x] = this.heuristic(this.start);
 
+    // Adicionar o nó inicial à fila de prioridade
     priorityQueue.push({
       pos: this.start,
       f: fScore[this.start.y][this.start.x]
     });
 
+    // Grid para rastrear o nó pai de cada posição (para reconstruir o caminho)
     let parent = this.createGrid(null);
+
+    // Array para armazenar a ordem em que os nós foram visitados (para visualização)
     let visitedOrder = [];
 
+    // Loop principal: continua enquanto houver nós para explorar
     while (priorityQueue.length > 0) {
-      // ordenar por f (custo total estimado)
+      // Ordenar a fila por f (custo total estimado) - menor f tem prioridade
       priorityQueue.sort((a, b) => a.f - b.f);
+
+      // Remover e processar o nó com menor f (mais promissor)
       const { pos: current } = priorityQueue.shift();
 
+      // Se o nó já foi visitado, pular para o próximo
       if (this.wasVisited(current)) {
         continue;
       }
 
+      // Marcar o nó atual como visitado
       this.visited[current.y][current.x] = true;
       visitedOrder.push(current);
 
+      // Se chegamos ao destino (comida), parar a busca
       if (this.isDestination(current)) break;
 
+      // Explorar todos os vizinhos do nó atual (cima, baixo, esquerda, direita)
       for (const dir of this.directions) {
         const x = current.x + dir.x;
         const y = current.y + dir.y;
 
+        // Verificar se a posição do vizinho é válida (dentro dos limites e não é parede)
         if (this.isValidPosition(x, y)) {
+          // Obter o tipo de terreno e seu custo associado
           const terrainType = this.grid[y][x].type;
           const moveCost = TERRAIN_COST[terrainType] || 1;
+
+          // Calcular o custo tentativo para chegar a este vizinho
+          // custo atual + custo de movimento para o vizinho
           const tentativeGScore = gScore[current.y][current.x] + moveCost;
 
-          // se encontramos um caminho melhor para este nó
+          // Se encontramos um caminho melhor (mais barato) para este nó
           if (tentativeGScore < gScore[y][x]) {
+            // Atualizar o gScore com o novo custo menor
             gScore[y][x] = tentativeGScore;
+
+            // Atualizar o fScore (custo real + estimativa heurística)
             fScore[y][x] = tentativeGScore + this.heuristic({ x, y });
+
+            // Registrar o nó atual como pai deste vizinho (para reconstruir o caminho)
             parent[y][x] = current;
 
-            // adicionar à fila de prioridade se ainda não foi visitado
+            // Adicionar o vizinho à fila de prioridade se ainda não foi visitado
             if (!this.wasVisited({ x, y })) {
               priorityQueue.push({
                 pos: { x, y },
@@ -219,7 +250,10 @@ export class Search {
       }
     }
 
+    // Reconstruir o caminho do início ao destino usando o grid de pais
     const path = this._reconstructPath(parent);
+
+    // Retornar a ordem de visitação e o caminho encontrado
     return { visitedOrder, path };
   }
 

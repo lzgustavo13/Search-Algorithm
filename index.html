@@ -22,6 +22,14 @@
     .controls {
       margin-bottom: 20px;
     }
+    .stats {
+      margin-bottom: 15px;
+      font-size: 18px;
+    }
+    .stats strong {
+      color: #4CAF50;
+      font-size: 24px;
+    }
     select, button {
       padding: 8px;
       font-size: 16px;
@@ -44,6 +52,10 @@
         <option value="a_star">A*</option>
       </select>
     <button id="start-search-btn">Iniciar Busca</button>
+  </div>
+
+  <div class="stats">
+    <span>Comidas Coletadas: <strong id="food-counter">0</strong></span>
   </div>
 
   <main></main>

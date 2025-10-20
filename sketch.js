@@ -18,6 +18,7 @@ window.setup = function () {
   this.visitedOrder = []; // ordem das células visitadas
   this.animationStep = ANIM.NONE; // passo atual da animação
   this.isAnimating = false; // estado da animação
+  this.foodCount = 0; // contador de comidas coletadas
 
   this.map = new Map(GRID_ROWS, GRID_COLS);
   const agentPos = this.map.placeCharacter();
@@ -30,12 +31,21 @@ window.setup = function () {
 
   const startButton = document.getElementById("start-search-btn");
   startButton.addEventListener("click", startSearch.bind(this));
+
+  updateFoodCounter.call(this);
 };
 
 function startSearch() {
   const selectedAlgorithm = document.getElementById("algorithm-select").value;
+
+  // Resetar contador se o algoritmo foi trocado
+  if (this.selectedAlgorithm && this.selectedAlgorithm !== selectedAlgorithm) {
+    this.foodCount = 0;
+    updateFoodCounter.call(this);
+  }
+
   this.selectedAlgorithm = selectedAlgorithm;
-  this.isAnimating = false; 
+  this.isAnimating = false;
   this.search = new Search(this.agent, this.map.grid, this.food);
 
   const { visitedOrder, path } = runSelectedSearch.call(this);
@@ -109,6 +119,10 @@ window.draw = function () {
 
     // check if agent reached the food
     if (this.animationIndex >= this.path.length - 1) {
+      // Incrementar contador de comida
+      this.foodCount++;
+      updateFoodCounter.call(this);
+
       let newPos;
       let newPath = [];
       let newVisited = [];
@@ -177,4 +191,11 @@ function resetAnimationState(visitedOrder, path) {
   this.framesPerStep = this.framesPerStep || DEFAULT_FRAMES_PER_STEP; // frames per step
   this.moveFrameCounter = 0; // frame counter for movement
   this.moveFramesForCurrentCell = 1; // frames needed for current cell movement
+}
+
+function updateFoodCounter() {
+  const counterElement = document.getElementById("food-counter");
+  if (counterElement) {
+    counterElement.textContent = this.foodCount || 0;
+  }
 }
