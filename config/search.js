@@ -56,7 +56,7 @@ export class Search {
     return pos.x === this.food.x && pos.y === this.food.y;
   }
 
- // Reconstruct path from parent map to food
+  // Reconstruct path from parent map to food
   _reconstructPath(parent) {
     let path = [];
     let current = this.food;
@@ -122,7 +122,6 @@ export class Search {
   }
 
   dfs() {
-
     let stack = [];
     stack.push(this.start);
     this.visited[this.start.y][this.start.x] = true;
@@ -140,10 +139,7 @@ export class Search {
         const x = current.x + dir.x;
         const y = current.y + dir.y;
 
-        if (
-          this.isValidPosition(x, y) &&
-          !this.wasVisited({ x, y })
-        ) {
+        if (this.isValidPosition(x, y) && !this.wasVisited({ x, y })) {
           this.visited[y][x] = true;
           parent[y][x] = current;
           stack.push({ x, y });
@@ -154,7 +150,6 @@ export class Search {
     const path = this._reconstructPath(parent);
 
     return { visitedOrder, path };
-
   }
 
   // Heurística: distância de Manhattan
@@ -183,7 +178,7 @@ export class Search {
     // Adicionar o nó inicial à fila de prioridade
     priorityQueue.push({
       pos: this.start,
-      f: fScore[this.start.y][this.start.x]
+      f: fScore[this.start.y][this.start.x],
     });
 
     // Grid para rastrear o nó pai de cada posição (para reconstruir o caminho)
@@ -242,7 +237,7 @@ export class Search {
             if (!this.wasVisited({ x, y })) {
               priorityQueue.push({
                 pos: { x, y },
-                f: fScore[y][x]
+                f: fScore[y][x],
               });
             }
           }
@@ -259,16 +254,16 @@ export class Search {
 
   greedyBestFirst() {
     let priorityQueue = [];
-    const startHeuristic = 
-      Math.abs(this.start.x - this.food.x) + 
+    const startHeuristic =
+      Math.abs(this.start.x - this.food.x) +
       Math.abs(this.start.y - this.food.y);
     priorityQueue.push({ pos: this.start, heuristic: startHeuristic });
 
     let parent = this.createGrid(null);
     let visitedOrder = [];
-    
+
     this.visited[this.start.y][this.start.x] = true;
-    
+
     while (priorityQueue.length > 0) {
       let minIndex = 0;
       for (let i = 1; i < priorityQueue.length; i++) {
@@ -276,11 +271,11 @@ export class Search {
           minIndex = i;
         }
       }
-      
+
       const { pos: current } = priorityQueue[minIndex];
       priorityQueue[minIndex] = priorityQueue[priorityQueue.length - 1];
       priorityQueue.pop();
-      
+
       visitedOrder.push(current);
 
       if (this.isDestination(current)) break;
@@ -290,17 +285,17 @@ export class Search {
         const y = current.y + dir.y;
 
         if (this.isValidPosition(x, y) && !this.wasVisited({ x, y })) {
-          this.visited[y][x] = true;  //marcado como visitado ao adicionar à fila para evitar duplicatas
-          
-          const heuristic = 
-            Math.abs(x - this.food.x) + 
-            Math.abs(y - this.food.y);
+          this.visited[y][x] = true; //marcado como visitado ao adicionar à fila para evitar duplicatas
+          visitedOrder.push({ x, y });
+
+          const heuristic =
+            Math.abs(x - this.food.x) + Math.abs(y - this.food.y);
           parent[y][x] = current;
           priorityQueue.push({ pos: { x, y }, heuristic });
         }
       }
     }
-    
+
     const reached = this.visited[this.food.y][this.food.x];
     const path = reached ? this._reconstructPath(parent) : [];
 
