@@ -125,7 +125,52 @@ export class Search {
 
   aStar() {}
 
-  greedyBestFirst() {}
+  greedyBestFirst() {
+    let priorityQueue = [];
+    // Manhattan distance - may show more varied movement patterns
+    const startHeuristic = 
+      Math.abs(this.start.x - this.food.x) + 
+      Math.abs(this.start.y - this.food.y);
+    priorityQueue.push({ pos: this.start, heuristic: startHeuristic });
+
+    let parent = this.createGrid(null);
+    let visitedOrder = [];
+    
+    while (priorityQueue.length > 0) {
+      // sort by heuristic
+      priorityQueue.sort((a, b) => a.heuristic - b.heuristic);
+      const { pos: current } = priorityQueue.shift();
+      
+      if (this.wasVisited(current)) {
+        continue;
+      }
+
+      this.visited[current.y][current.x] = true; // visitado
+      visitedOrder.push(current);
+
+      if (this.isDestination(current)) break;
+
+      for (const dir of this.directions) {
+        const x = current.x + dir.x;
+        const y = current.y + dir.y;
+
+        if (this.isValidPosition(x, y) && !this.wasVisited({ x, y })) {
+          // Manhattan distance
+          const heuristic = 
+            Math.abs(x - this.food.x) + 
+            Math.abs(y - this.food.y);
+          parent[y][x] = current;
+          priorityQueue.push({ pos: { x, y }, heuristic });
+        }
+      }
+    }
+    
+    // Only reconstruct path if goal was reached
+    const reached = this.visited[this.food.y][this.food.x];
+    const path = reached ? this._reconstructPath(parent) : [];
+
+    return { visitedOrder, path };
+  }
 
   uniformCostSearch() {
     let priorityQueue = [];
