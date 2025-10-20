@@ -286,7 +286,7 @@ export class Search {
 
         if (this.isValidPosition(x, y) && !this.wasVisited({ x, y })) {
           this.visited[y][x] = true; //marcado como visitado ao adicionar à fila para evitar duplicatas
-          visitedOrder.push({ x, y });
+         
 
           const heuristic =
             Math.abs(x - this.food.x) + Math.abs(y - this.food.y);
