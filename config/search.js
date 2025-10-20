@@ -257,7 +257,55 @@ export class Search {
     return { visitedOrder, path };
   }
 
-  greedyBestFirst() {}
+  greedyBestFirst() {
+    let priorityQueue = [];
+    const startHeuristic = 
+      Math.abs(this.start.x - this.food.x) + 
+      Math.abs(this.start.y - this.food.y);
+    priorityQueue.push({ pos: this.start, heuristic: startHeuristic });
+
+    let parent = this.createGrid(null);
+    let visitedOrder = [];
+    
+    this.visited[this.start.y][this.start.x] = true;
+    
+    while (priorityQueue.length > 0) {
+      let minIndex = 0;
+      for (let i = 1; i < priorityQueue.length; i++) {
+        if (priorityQueue[i].heuristic < priorityQueue[minIndex].heuristic) {
+          minIndex = i;
+        }
+      }
+      
+      const { pos: current } = priorityQueue[minIndex];
+      priorityQueue[minIndex] = priorityQueue[priorityQueue.length - 1];
+      priorityQueue.pop();
+      
+      visitedOrder.push(current);
+
+      if (this.isDestination(current)) break;
+
+      for (const dir of this.directions) {
+        const x = current.x + dir.x;
+        const y = current.y + dir.y;
+
+        if (this.isValidPosition(x, y) && !this.wasVisited({ x, y })) {
+          this.visited[y][x] = true;  //marcado como visitado ao adicionar à fila para evitar duplicatas
+          
+          const heuristic = 
+            Math.abs(x - this.food.x) + 
+            Math.abs(y - this.food.y);
+          parent[y][x] = current;
+          priorityQueue.push({ pos: { x, y }, heuristic });
+        }
+      }
+    }
+    
+    const reached = this.visited[this.food.y][this.food.x];
+    const path = reached ? this._reconstructPath(parent) : [];
+
+    return { visitedOrder, path };
+  }
 
   uniformCostSearch() {
     let priorityQueue = [];
